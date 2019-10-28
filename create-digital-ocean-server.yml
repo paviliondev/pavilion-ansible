@@ -1,0 +1,33 @@
+---
+- hosts: localhost
+  gather_facts: no #don't need to gather facts on localhost
+
+  # collect information for creating the server
+  vars_prompt:
+    - name: "client_name"
+      prompt: "Enter the Client's name. This will be used as the pattern to create server names"
+      private: no
+    - name: "digital_ocean_api_key"
+      prompt: "Your API key is required in order to interact with the DO API"
+      private: no
+
+  tasks:
+  - name: create a new digital ocean droplet for testing/staging
+  # defaults are Ubuntu 18.04 LTS and 2Gb server
+    digital_ocean_droplet:
+      state: present
+      name: "{{ client_name }}.test.pavilion.io" # using a naming scheme keeps things tidy
+      oauth_token: "{{digital_ocean_api_key}}"
+      size: s-2vcpu-2gb
+      region: lon1
+      image: ubuntu-18-04-x64
+      wait_timeout: 500
+      ssh_keys:
+        - 586539
+      unique_name: yes # prevents multiple servers existing with the same name
+      tags: "{{ client_name }}"
+    register: new_droplet_facts
+
+  - debug: var=ansible_facts
+  - debug: var=new_droplet_facts
+
